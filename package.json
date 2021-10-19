@@ -5,13 +5,16 @@
   "main": "server.js",
   "scripts": {
     "devStart": "nodemon server.js",
+    "devStartAuth": "nodemon authServer.js",
     "start": "node server.js"
   },
   "author": "David Chen",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
     "mysql": "^2.18.1"
   },
   "devDependencies": {
