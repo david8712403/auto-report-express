@@ -1,5 +1,6 @@
 require('dotenv').config()
 const express = require('express')
+const { now } = require('./util/date')
 const bcrypt = require('bcrypt')
 const db = require('./db')
 const app = express()
@@ -24,7 +25,6 @@ app.post('/sign_up', (req, res) => {
       return
     }
     // 建立帳號
-    const now = new Date().toISOString().slice(0, 19).replace('T', ' ')
     const pwdHashed = bcrypt.hashSync(password, 9487)
     const insertSql = `
     INSERT INTO users (account, name, email, password, created, updated)
@@ -41,30 +41,38 @@ app.post('/sign_up', (req, res) => {
   })
 })
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   // authentication user
-  const { account, password } = req.body
-  db.query(`SELECT id, account, password FROM users WHERE account = '${account}';`,
-    (err, results, fields) => {
-      if (err) {
-        res.status(400).json({ error: err })
-        return
-      }
-      if (results.length === 0) {
-        res.status(400).json({ error: "Account not found" })
-        return
-      }
-      const { id, account } = results[0]
-      if (!bcrypt.compareSync(password, results[0]['password'])) {
-        res.status(400).json({ error: "Invalid password" })
-        return
-      }
-      const payload = { id: id, account: account }
+  try {
+    const { account, password } = req.body
+    const [users, userFields] = await (await db)
+      .execute(`SELECT id, account, password FROM users WHERE account = '${account}';`)
+    if (users.length === 0) {
+      res.status(400).json({ error: "Account not found" })
+      return
+    }
+    const user = users[0]
+    if (!bcrypt.compareSync(password, user.password)) {
+      res.status(400).json({ error: "Invalid password" })
+      return
+    }
+
+    const payload = { id: user.id, account: user.account }
+    const [tokens, tokenFields] = await (await db)
+      .execute(`SELECT value, user_id FROM tokens WHERE user_id = '${user.id}';`)
+    if (tokens.length) {
       const accessToken = generateAccessToken(payload)
       const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET)
-      res.json({ id: id, account: account, accessToken: accessToken, refreshToken: refreshToken })
+      await (await db).execute(`INSERT INTO tokens (user_id, value, created, updated)
+      VALUES (${user.id}, '${refreshToken}', '${now}', '${now}');`)
+      res.json({ id: user.id, account: user.account, accessToken: accessToken, refreshToken: refreshToken })
+      return
     }
-  )
+    res.json({ id: user.id, account: user.account, accessToken: generateAccessToken(payload), refreshToken: tokens[0].value })
+
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
 })
 
 app.post('/logout', (req, res) => {
@@ -78,7 +86,7 @@ app.post('/token', (req, res) => {
   // if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403)
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET,
     (err, payload) => {
-      if (err) return res.sendStatus(403)
+      if (err) return res.status(403).json({ error: err })
       const accessToken = generateAccessToken(payload)
       res.json({ accessToken: accessToken })
     })
