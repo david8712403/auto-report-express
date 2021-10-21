@@ -6,6 +6,7 @@
   "scripts": {
     "devStart": "nodemon server.js",
     "devStartAuth": "nodemon authServer.js",
+    "devStartAll": "nodemon server.js & nodemon authServer.js",
     "start": "node server.js & node authServer.js"
   },
   "author": "David Chen",
