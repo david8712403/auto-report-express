@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require('express')
 const { dtFormat } = require('./util/date')
+const { authenticationToken } = require('./middleware/auth')
 const bcrypt = require('bcrypt')
 const db = require('./db')
 const { errorHandler } = require('./middleware/error')
@@ -57,7 +58,7 @@ app.post('/login', async (req, res, next) => {
     const now = new Date()
     const payload = { id: user.id, account: user.account }
     const [tokens, tokenFields] = await req.db
-      .execute(`SELECT value, user_id FROM tokens WHERE user_id = '${user.id}';`)
+      .execute(`SELECT value, user_id, valid FROM tokens WHERE user_id = '${user.id}' AND valid = "Y";`)
     if (tokens.length) {
       await req.db.execute(`UPDATE tokens SET updated = '${dtFormat(now)}' WHERE value = '${tokens[0].value}';`)
       res.json({
@@ -84,9 +85,20 @@ app.post('/login', async (req, res, next) => {
   }
 })
 
-app.post('/logout', (req, res) => {
-  // refreshTokens = refreshTokens.filter(token => token !== req.body.token)
-  res.sendStatus(200)
+app.post('/logout', async (req, res, next) => {
+  try {
+    const token = req.body.token
+    const [tokenRows, tokenFields] = await req.db
+      .execute(`SELECT * FROM tokens WHERE value = '${token}' AND valid != 'N';`)
+    if (tokenRows.length === 0)
+      throw new Error("Logout failed")
+
+    await req.db.execute(
+      `UPDATE tokens SET valid = 'N' WHERE value = '${token}';`)
+    res.sendStatus(200)
+  } catch (error) {
+    next(error)
+  }
 })
 
 app.post('/token', (req, res) => {
