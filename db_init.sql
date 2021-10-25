@@ -46,7 +46,36 @@ CREATE TABLE daily_reports (
 	content VARCHAR(255) NOT NULL,
 	date VARCHAR(15) NOT NULL,
 	created TIMESTAMP(3) NOT NULL,
+	updated TIMESTAMP(3),
 	PRIMARY KEY (id),
 	FOREIGN KEY (user_id) REFERENCES users(id),
 	FOREIGN KEY (organization_id) REFERENCES organizations(id)
 );
+
+-- CREATE TABLE report_email_tasks (
+-- 	id INT NOT NULL AUTO_INCREMENT,
+-- 	author_id INT NOT NULL,
+-- 	organization_id INT NOT NULL,
+-- 	title VARCHAR(100) NOT NULL,
+-- 	activate VARCHAR(1) NOT NULL DEFAULT("N"),
+-- 	meta_data VARCHAR(1024),
+-- 	content VARCHAR(2048),
+-- 	html VARCHAR(2048),
+-- 	PRIMARY KEY (id),
+-- 	FOREIGN KEY (author_id) REFERENCES users(id),
+-- 	FOREIGN KEY (organization_id) REFERENCES organizations(id)
+-- );
+
+-- CREATE TABLE remind_email_tasks (
+-- 	id INT NOT NULL AUTO_INCREMENT,
+-- 	author_id INT NOT NULL,
+-- 	organization_id INT NOT NULL,
+-- 	title VARCHAR(100) NOT NULL,
+-- 	activate VARCHAR(1) NOT NULL DEFAULT("N"),
+-- 	meta_data VARCHAR(1024),
+-- 	content VARCHAR(2048),
+-- 	html VARCHAR(2048),
+-- 	PRIMARY KEY (id),
+-- 	FOREIGN KEY (author_id) REFERENCES users(id),
+-- 	FOREIGN KEY (organization_id) REFERENCES organizations(id)
+-- );

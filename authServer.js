@@ -104,7 +104,6 @@ app.post('/logout', async (req, res, next) => {
 app.post('/token', (req, res) => {
   const refreshToken = req.body.token
   if (refreshToken == null) return res.sendStatus(401)
-  // if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403)
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET,
     (err, payload) => {
       if (err) return res.status(403).json({ error: err })
