@@ -90,8 +90,8 @@ app.post('/logout', async (req, res, next) => {
     const token = req.body.token
     const [tokenRows, tokenFields] = await req.db
       .execute(`SELECT * FROM tokens WHERE value = '${token}' AND valid != 'N';`)
-    if (tokenRows.length === 0)
-      throw new Error("Logout failed")
+    // if (tokenRows.length === 0)
+    //   throw new Error("Logout failed")
 
     await req.db.execute(
       `UPDATE tokens SET valid = 'N' WHERE value = '${token}';`)
@@ -101,13 +101,17 @@ app.post('/logout', async (req, res, next) => {
   }
 })
 
-app.post('/token', (req, res) => {
+app.post('/token', async (req, res) => {
   const refreshToken = req.body.token
-  if (refreshToken == null) return res.sendStatus(401)
+  const [tokenRows] = await req.db
+    .execute(`SELECT * FROM tokens WHERE value = '${refreshToken}' AND valid != 'N';`)
+  if (tokenRows.length === 0) return res.sendStatus(403)
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET,
     (err, payload) => {
+      payload.iat = Math.round(new Date().getTime() / 1000);
       if (err) return res.status(403).json({ error: err })
       const accessToken = generateAccessToken(payload)
+      console.log(accessToken);
       res.json({ accessToken: accessToken })
     })
 })
