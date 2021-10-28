@@ -36,6 +36,10 @@ router.put('/', authenticationToken, async (req, res, next) => {
   try {
     const { id, organization } = req.auth
     const { content, date } = req.body
+    if (!(content && date)) {
+      res.status(400).json({ error: "content, date can not be empty" })
+      return;
+    }
     var now = dtFormat(new Date())
     const [reportRows] = await req.db.execute(`SELECT * FROM daily_reports
         WHERE user_id = ${id} AND

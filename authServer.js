@@ -111,7 +111,6 @@ app.post('/token', async (req, res) => {
       payload.iat = Math.round(new Date().getTime() / 1000);
       if (err) return res.status(403).json({ error: err })
       const accessToken = generateAccessToken(payload)
-      console.log(accessToken);
       res.json({ accessToken: accessToken })
     })
 })

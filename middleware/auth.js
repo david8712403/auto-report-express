@@ -17,6 +17,7 @@ const authenticationToken = async (req, res, next) => {
       return
     }
     payload.organization = userRelateRows[0].organization_id
+    payload.role = userRelateRows[0].role
     req.auth = payload
     next()
   })
