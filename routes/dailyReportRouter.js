@@ -82,4 +82,39 @@ router.patch('/', authenticationToken, async (req, res, next) => {
   }
 })
 
+// 取得每日組織內的daily_report統計
+router.get('/summary', authenticationToken, async (req, res, next) => {
+  try {
+    const defaultDate = date.format(new Date(), "Y-MM-D")
+    const { organization } = req.auth
+    const sqlMember = `
+    SELECT userId, account, userName, email FROM
+    (SELECT * FROM 
+      (SELECT * FROM user_relations
+        WHERE organization_id = ${organization}) as dr
+      JOIN ( SELECT id as userId, name as userName, email, account FROM users ) as users
+    ON users.userId = dr.user_id) as t`
+
+    const sqlReport = `
+    SELECT id, userId, userName, content, date, created, updated FROM
+    (SELECT * FROM 
+      (SELECT * FROM daily_reports
+        WHERE organization_id = ${organization} AND
+        date = '${req.body.date ?? defaultDate}') as dr
+      JOIN ( SELECT id as userId, name as userName FROM users ) as users
+      ON users.userId = dr.user_id) as t
+    ORDER BY t.date DESC`
+
+    const [memberRows] = await req.db.execute(sqlMember)
+    const [reportRows] = await req.db.execute(sqlReport)
+    let reportDic = reportRows.reduce((a, x) => ({ ...a, [x.userId]: x }), {})
+    const reportResult = memberRows.map((e) => {
+      return { ...e, report: reportDic[e.userId] }
+    })
+    res.status(200).json({ results: reportResult })
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = router
