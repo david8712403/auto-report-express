@@ -82,6 +82,29 @@ router.patch('/', authenticationToken, async (req, res, next) => {
   }
 })
 
+// 更新指定日期的daily report
+router.delete('/', authenticationToken, async (req, res, next) => {
+  try {
+    const { id, organization } = req.auth
+    const { content, date } = req.body
+    var now = dtFormat(new Date())
+    const [reportRows] = await req.db.execute(`SELECT * FROM daily_reports
+        WHERE user_id = ${id} AND
+        organization_id = ${organization} AND
+        date = '${date}'`)
+    if (reportRows.length === 0) {
+      res.status(400).json({ error: `daily report in ${date} not found` })
+      return
+    }
+    const updateSql = `DELETE FROM daily_reports
+    WHERE id = ${reportRows[0].id}`
+    await req.db.execute(updateSql)
+    res.sendStatus(200)
+  } catch (error) {
+    next(error)
+  }
+})
+
 // 取得每日組織內的daily_report統計
 router.get('/summary', authenticationToken, async (req, res, next) => {
   try {
