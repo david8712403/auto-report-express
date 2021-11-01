@@ -115,6 +115,33 @@ app.post('/token', async (req, res) => {
     })
 })
 
+app.post('/reset_password', authenticationToken, async (req, res, next) => {
+  try {
+    const now = new Date()
+    const { oldPassword, newPassword } = req.body;
+    const { id } = req.auth
+    console.log(req.body);
+    // 確認是否有資訊重複或存在
+    const [userRows] = await req.db.execute(
+      `SELECT * FROM users WHERE id = '${id}';`)
+    if (userRows.length === 0)
+      throw new Error("account not found")
+
+    // 驗證舊密碼
+    if (!bcrypt.compareSync(oldPassword, userRows[0].password))
+      throw new Error("Invalid password")
+    const pwdHashed = bcrypt.hashSync(newPassword, 9487)
+    
+    // Update password
+    await req.db.execute(`UPDATE users
+    SET password = '${pwdHashed}', updated = '${dtFormat(now)}'
+    WHERE id = '${userRows[0].id}';`)
+    res.sendStatus(200)
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.use(errorHandler)
 
 function generateAccessToken(user) {
