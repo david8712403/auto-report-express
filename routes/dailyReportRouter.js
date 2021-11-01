@@ -86,8 +86,7 @@ router.patch('/', authenticationToken, async (req, res, next) => {
 router.delete('/', authenticationToken, async (req, res, next) => {
   try {
     const { id, organization } = req.auth
-    const { content, date } = req.body
-    var now = dtFormat(new Date())
+    const { date } = req.body
     const [reportRows] = await req.db.execute(`SELECT * FROM daily_reports
         WHERE user_id = ${id} AND
         organization_id = ${organization} AND
@@ -123,7 +122,7 @@ router.get('/summary', authenticationToken, async (req, res, next) => {
     (SELECT * FROM 
       (SELECT * FROM daily_reports
         WHERE organization_id = ${organization} AND
-        date = '${req.body.date ?? defaultDate}') as dr
+        date = '${req.query.date ?? defaultDate}') as dr
       JOIN ( SELECT id as userId, name as userName FROM users ) as users
       ON users.userId = dr.user_id) as t
     ORDER BY t.date DESC`
