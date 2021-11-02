@@ -52,6 +52,15 @@ CREATE TABLE daily_reports (
 	FOREIGN KEY (organization_id) REFERENCES organizations(id)
 );
 
+CREATE TABLE change_logs (
+	id INT NOT NULL AUTO_INCREMENT,
+	title VARCHAR(255) NOT NULL,
+	author VARCHAR(255) NOT NULL,
+	content VARCHAR(1024) NOT NULL,
+	created TIMESTAMP(3) NOT NULL,
+	PRIMARY KEY (id)
+);
+
 -- CREATE TABLE report_email_tasks (
 -- 	id INT NOT NULL AUTO_INCREMENT,
 -- 	author_id INT NOT NULL,
