@@ -8,7 +8,7 @@ router.post('/slack/remind', authenticationToken, async (req, res, next) => {
   try {
     const { id, organization, role } = req.auth
     const { type, mentions, message } = req.body
-    const orgSql = `SELECT * FROM organizations WHERE id = '${id}'`
+    const orgSql = `SELECT * FROM organizations WHERE id = '${organization}'`
     const [orgs] = await req.db.execute(orgSql)
     const webhookUrl = orgs[0].slack_webhook
     console.log(webhookUrl);
