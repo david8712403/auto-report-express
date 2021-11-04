@@ -6,7 +6,7 @@ const bcrypt = require('bcrypt')
 const db = require('./db')
 const { errorHandler } = require('./middleware/error')
 const app = express()
-const port = 4000
+const port = process.env.AUTH_SERVER_PORT
 
 const jwt = require('jsonwebtoken')
 

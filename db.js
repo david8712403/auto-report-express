@@ -8,6 +8,6 @@ const config = {
     database: process.env.DB_NAME,
     port: process.env.DB_PORT
 }
-const db = mysql.createConnection(config);
+const db = mysql.createPool(config);
 
 module.exports = db
