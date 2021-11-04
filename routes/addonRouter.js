@@ -7,20 +7,27 @@ const router = express.Router('')
 router.post('/slack/remind', authenticationToken, async (req, res, next) => {
   try {
     const { id, organization, role } = req.auth
-    const { type, mentions, message } = req.body
+    if (role !== "admin")
+      throw new Error("Only admin can send Slack message")
+    let { type, mentions, message } = req.body
     const orgSql = `SELECT * FROM organizations WHERE id = '${organization}'`
     const [orgs] = await req.db.execute(orgSql)
     const webhookUrl = orgs[0].slack_webhook
-    console.log(webhookUrl);
-    // const userSql = `SELECT * FROM users WHERE id IN (${mentions})`
-    // const [users] = await req.db.execute(userSql)
-    // console.log(userSql);
-    // console.log(users);
-    axios.post(webhookUrl, {
-      text: message
-    })
-    res.sendStatus(200)
-    console.log(req.auth);
+
+    const userSql = `SELECT * FROM user_relations
+    INNER JOIN (SELECT * FROM users) as users ON user_relations.user_id = users.id
+    WHERE users.id IN (${mentions}) AND organization_id = ${organization}`
+    const [users] = await req.db.execute(userSql)
+
+    let mentionUserStr = ""
+    users.forEach(e => {
+      if (e.slack_id) mentionUserStr += `<@${e.slack_id}> `
+    });
+    message = message.replace('{}', mentionUserStr)
+
+    // send slack message
+    axios.post(webhookUrl, { text: message })
+    res.status(200).json({ message: message })
   } catch (error) {
     next(error)
   }
