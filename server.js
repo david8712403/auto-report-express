@@ -4,6 +4,7 @@ const { errorHandler } = require('./middleware/error')
 const dailyReportRouter = require('./routes/dailyReportRouter')
 const memberRouter = require('./routes/memberRouter')
 const systemRouter = require('./routes/systemRouter')
+const addonRouter = require('./routes/addonRouter')
 const db = require('./db')
 
 const app = express()
@@ -22,6 +23,7 @@ app.use(async (req, res, next) => {
 
 app.use('/daily_report', dailyReportRouter)
 app.use('/member', memberRouter)
+app.use('/addon', addonRouter)
 app.use('/system', systemRouter)
 
 app.get('/', (req, res) => {
