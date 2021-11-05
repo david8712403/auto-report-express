@@ -21,7 +21,10 @@ router.post('/slack/remind', authenticationToken, async (req, res, next) => {
 
     let mentionUserStr = ""
     users.forEach(e => {
-      if (e.slack_id) mentionUserStr += `<@${e.slack_id}> `
+      if (e.slack_id)
+        mentionUserStr += `<@${e.slack_id}> `
+      else
+        mentionUserStr += `${e.name} `
     });
     message = message.replace('{}', mentionUserStr)
 
