@@ -29,7 +29,7 @@ router.post('/slack/remind', authenticationToken, async (req, res, next) => {
     message = message.replace('{}', mentionUserStr)
 
     // send slack message
-    axios.post(webhookUrl, { text: message })
+    await axios.post(webhookUrl, { text: message })
     res.status(200).json({ message: message })
   } catch (error) {
     next(error)
