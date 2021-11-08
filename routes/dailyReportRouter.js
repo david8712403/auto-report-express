@@ -3,25 +3,32 @@ const { authenticationToken } = require('../middleware/auth')
 const router = express.Router('')
 const { dtFormat } = require('../util/date')
 const date = require('date-and-time');
+const { rmNullValue } = require('../util/json')
 
 // 取得組織內daily report
 router.get('/', authenticationToken, async (req, res, next) => {
   try {
-    const defaultStartDate = date.format(new Date(2021, 1, 1), "Y-MM-D")
-    const defaultEndDate = date.format(new Date(), "Y-MM-D")
+    const defaultStartDate = date.format(new Date(2021, 1, 1), "Y-MM-DD")
+    const defaultEndDate = date.format(new Date(), "Y-MM-DD")
     const { startDate, endDate } = req.query
     const { organization } = req.auth
 
     let sql = `
-    SELECT id, userId, userName, content, date, created, updated FROM
-    (SELECT * FROM 
-      (SELECT * FROM daily_reports
-        WHERE organization_id = ${organization} AND
-        date >= '${startDate ?? defaultStartDate}' AND
-        date <= '${endDate ?? defaultEndDate}') as dr
-      JOIN ( SELECT id as userId, name as userName FROM users ) as users
-    ON users.userId = dr.user_id) as t
-    ORDER BY t.date DESC`
+    SELECT
+      d.id,
+      u.id AS userId,
+      u.name AS userName,
+      d.content,
+      d.date,
+      d.created,
+      d.updated
+    FROM users u
+    JOIN (SELECT * FROM daily_reports WHERE organization_id = ${organization} AND 
+      date >= '${startDate ?? defaultStartDate}' AND
+      date <= '${endDate ?? defaultEndDate}') d
+      ON d.user_id = u.id
+    JOIN (SELECT * FROM user_relations WHERE organization_id = ${organization}) AS r
+      ON r.user_id = u.id`
     const [reportRows] = await req.db.execute(sql)
     res.json({
       results: reportRows
@@ -107,33 +114,25 @@ router.delete('/', authenticationToken, async (req, res, next) => {
 // 取得每日組織內的daily_report統計
 router.get('/summary', authenticationToken, async (req, res, next) => {
   try {
-    const defaultDate = date.format(new Date(), "Y-MM-D")
+    const defaultDate = date.format(new Date(), "Y-MM-DD")
     const { organization } = req.auth
-    const sqlMember = `
-    SELECT userId, account, userName, email FROM
-    (SELECT * FROM 
-      (SELECT * FROM user_relations
-        WHERE organization_id = ${organization}) as dr
-      JOIN ( SELECT id as userId, name as userName, email, account FROM users ) as users
-    ON users.userId = dr.user_id) as t`
 
-    const sqlReport = `
-    SELECT id, userId, userName, content, date, created, updated FROM
-    (SELECT * FROM 
-      (SELECT * FROM daily_reports
-        WHERE organization_id = ${organization} AND
-        date = '${req.query.date ?? defaultDate}') as dr
-      JOIN ( SELECT id as userId, name as userName FROM users ) as users
-      ON users.userId = dr.user_id) as t
-    ORDER BY t.date DESC`
-
-    const [memberRows] = await req.db.execute(sqlMember)
-    const [reportRows] = await req.db.execute(sqlReport)
-    let reportDic = reportRows.reduce((a, x) => ({ ...a, [x.userId]: x }), {})
-    const reportResult = memberRows.map((e) => {
-      return { ...e, report: reportDic[e.userId] }
-    })
-    res.status(200).json({ results: reportResult })
+    const sql = `SELECT
+      d.id,
+      u.id AS userId,
+      u.name AS userName,
+      d.content,
+      d.date,
+      d.created,
+      d.updated
+    FROM users u
+    LEFT JOIN (SELECT * FROM daily_reports WHERE date = '${req.body.date ?? defaultDate}') d
+      ON d.user_id = u.id
+    JOIN (SELECT * FROM user_relations WHERE organization_id = ${organization}) AS r
+      ON r.user_id = u.id`
+    const [reports] = await req.db.execute(sql)
+    var results = rmNullValue(reports)
+    res.status(200).json({ results: results })
   } catch (error) {
     next(error)
   }
