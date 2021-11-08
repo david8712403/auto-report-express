@@ -28,7 +28,8 @@ router.get('/', authenticationToken, async (req, res, next) => {
       date <= '${endDate ?? defaultEndDate}') d
       ON d.user_id = u.id
     JOIN (SELECT * FROM user_relations WHERE organization_id = ${organization}) AS r
-      ON r.user_id = u.id`
+      ON r.user_id = u.id
+    ORDER BY d.created DESC`
     const [reportRows] = await req.db.execute(sql)
     res.json({
       results: reportRows
