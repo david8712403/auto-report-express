@@ -6,15 +6,15 @@ const { dtFormat } = require('../util/date')
 router.get('/logs', async (req, res, next) => {
   try {
     let sql = `
-    SELECT * FROM change_logs ORDER BY created DESC`
-    const [logs] = await req.db.execute(sql)
+    SELECT * FROM change_logs ORDER BY created DESC`;
+    const [logs] = await req.db.execute(sql);
     res.json({
       results: logs
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
+});
 
 // 新增系統更新日誌
 router.put('/logs', async (req, res, next) => {
