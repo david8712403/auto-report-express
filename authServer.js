@@ -47,7 +47,7 @@ app.post('/login', async (req, res, next) => {
   try {
     const { account, password } = req.body
     const [users, userFields] = await req.db
-      .execute(`SELECT id, account, password FROM users WHERE account = '${account}';`)
+      .execute(`SELECT * FROM users WHERE account = '${account}';`)
     if (users.length === 0)
       throw new Error("Account not found")
 
@@ -57,10 +57,14 @@ app.post('/login', async (req, res, next) => {
 
     const now = new Date()
     const payload = { id: user.id, account: user.account }
-    const [tokens, tokenFields] = await req.db
-      .execute(`SELECT value, user_id, valid FROM tokens WHERE user_id = '${user.id}' AND valid = "Y";`)
+    const [tokens] = await req.db
+      .execute(`SELECT * FROM tokens WHERE user_id = '${user.id}' AND valid = "Y";`)
     if (tokens.length) {
-      await req.db.execute(`UPDATE tokens SET updated = '${dtFormat(now)}' WHERE value = '${tokens[0].value}';`)
+      const updateSql = `UPDATE tokens 
+        SET updated = '${dtFormat(now)}',
+        refreshCount = refreshCount + 1 
+      WHERE id = ${tokens[0].id};`
+      await req.db.execute(updateSql)
       res.json({
         id: user.id,
         account: user.account,
@@ -107,10 +111,14 @@ app.post('/token', async (req, res) => {
     .execute(`SELECT * FROM tokens WHERE value = '${refreshToken}' AND valid != 'N';`)
   if (tokenRows.length === 0) return res.sendStatus(403)
   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET,
-    (err, payload) => {
+    async (err, payload) => {
       payload.iat = Math.round(new Date().getTime() / 1000);
       if (err) return res.status(403).json({ error: err })
       const accessToken = generateAccessToken(payload)
+      // increase refresh count
+      await req.db.execute(`UPDATE tokens
+      SET refreshCount = refreshCount + 1
+      WHERE id = '${tokenRows[0].id}';`)
       res.json({ accessToken: accessToken })
     })
 })
@@ -131,7 +139,7 @@ app.post('/reset_password', authenticationToken, async (req, res, next) => {
     if (!bcrypt.compareSync(oldPassword, userRows[0].password))
       throw new Error("Invalid password")
     const pwdHashed = bcrypt.hashSync(newPassword, 9487)
-    
+
     // Update password
     await req.db.execute(`UPDATE users
     SET password = '${pwdHashed}', updated = '${dtFormat(now)}'
