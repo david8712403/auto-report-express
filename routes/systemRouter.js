@@ -1,7 +1,8 @@
 const express = require('express')
 const router = express.Router('')
+const { dtFormat } = require('../util/date')
 
-// 取得組織內成員清單
+// 取得系統更新日誌
 router.get('/logs', async (req, res, next) => {
   try {
     let sql = `
@@ -15,4 +16,18 @@ router.get('/logs', async (req, res, next) => {
   }
 })
 
+// 新增系統更新日誌
+router.put('/logs', async (req, res, next) => {
+  try {
+    const { title, platform, author, content } = req.body
+    const now = new Date()
+    let sql = `
+    INSERT INTO change_logs (title, platform, author, content, created)
+    VALUES ('${title ?? ""}', '${platform ?? ""}', '${author ?? ""}', '${content ?? ""}','${dtFormat(now)}')`
+    await req.db.execute(sql)
+    res.sendStatus(200)
+  } catch (error) {
+    next(error)
+  }
+})
 module.exports = router
