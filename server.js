@@ -1,37 +1,37 @@
-require('dotenv').config
-const express = require("express");
-const { errorHandler } = require('./middleware/error')
-const dailyReportRouter = require('./routes/dailyReportRouter')
-const memberRouter = require('./routes/memberRouter')
-const systemRouter = require('./routes/systemRouter')
-const addonRouter = require('./routes/addonRouter')
-const db = require('./db')
+require('dotenv').config;
+const express = require('express');
+const { errorHandler } = require('./middleware/error');
+const dailyReportRouter = require('./routes/dailyReportRouter');
+const memberRouter = require('./routes/memberRouter');
+const systemRouter = require('./routes/systemRouter');
+const addonRouter = require('./routes/addonRouter');
+const db = require('./db');
 
-const app = express()
-const port = process.env.SERVER_PORT
+const app = express();
+const port = process.env.SERVER_PORT;
 
-app.use(express.json())
+app.use(express.json());
 
 app.use(async (req, res, next) => {
   try {
-    req.db = await db
-    next()
+    req.db = await db;
+    next();
   } catch (error) {
-    next(error)
+    next(error);
   }
-})
+});
 
-app.use('/daily_report', dailyReportRouter)
-app.use('/member', memberRouter)
-app.use('/addon', addonRouter)
-app.use('/system', systemRouter)
+app.use('/daily_report', dailyReportRouter);
+app.use('/member', memberRouter);
+app.use('/addon', addonRouter);
+app.use('/system', systemRouter);
 
 app.get('/', (req, res) => {
-  res.send("<h1>Auto Report<h1>")
-})
+  res.send('<h1>Auto Report<h1>');
+});
 
-app.use(errorHandler)
+app.use(errorHandler);
 
 app.listen(port, () => {
-  console.log(`server run on port ${port}`)
-})
+  console.log(`server run on port ${port}`);
+});
