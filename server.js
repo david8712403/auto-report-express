@@ -12,6 +12,7 @@ const port = process.env.SERVER_PORT;
 
 app.use(express.json());
 
+// TODO: 等各個controller, service完工，就不需要這個middleware了
 app.use(async (req, res, next) => {
   try {
     req.db = await db;

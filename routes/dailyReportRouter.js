@@ -3,37 +3,14 @@ const { authenticationToken } = require('../middleware/auth');
 const router = express.Router('');
 const { dtFormat } = require('../util/date');
 const date = require('date-and-time');
-const { rmNullValue } = require('../util/json')
-const { getDailyReport } = require("../controller/dailyReportController");
+const { rmNullValue } = require('../util/json');
+const { getDailyReport, createDailyReport, deleteDailyReport } = require('../controller/dailyReportController');
 
 // 取得組織內daily report
-router.get('/', authenticationToken, getDailyReport)
+router.get('/', authenticationToken, getDailyReport);
 
 // 新增daily report
-router.put('/', authenticationToken, async (req, res, next) => {
-  try {
-    const { id, organization } = req.auth;
-    const { content, date } = req.body;
-    if (!(content && date)) {
-      res.status(400).json({ error: 'content, date can not be empty' });
-      return;
-    }
-    var now = dtFormat(new Date());
-    const [reportRows] = await req.db.execute(`SELECT * FROM daily_reports
-        WHERE user_id = ${id} AND
-        organization_id = ${organization} AND
-        date = '${date}'`);
-    if (reportRows.length !== 0) {
-      res.status(400).json({ error: `daily report in ${date} already exist` });
-      return;
-    }
-    await req.db.execute(`INSERT INTO daily_reports (user_id, organization_id, content, date, created)
-        VALUES (${id}, ${organization}, '${content}', '${date}', '${now}')`);
-    res.sendStatus(200);
-  } catch (error) {
-    next(error);
-  }
-});
+router.put('/', authenticationToken, createDailyReport);
 
 // 更新指定日期的daily report
 router.patch('/', authenticationToken, async (req, res, next) => {
@@ -60,27 +37,8 @@ router.patch('/', authenticationToken, async (req, res, next) => {
   }
 });
 
-// 更新指定日期的daily report
-router.delete('/', authenticationToken, async (req, res, next) => {
-  try {
-    const { id, organization } = req.auth;
-    const { date } = req.body;
-    const [reportRows] = await req.db.execute(`SELECT * FROM daily_reports
-        WHERE user_id = ${id} AND
-        organization_id = ${organization} AND
-        date = '${date}'`);
-    if (reportRows.length === 0) {
-      res.status(400).json({ error: `daily report in ${date} not found` });
-      return;
-    }
-    const updateSql = `DELETE FROM daily_reports
-    WHERE id = ${reportRows[0].id}`;
-    await req.db.execute(updateSql);
-    res.sendStatus(200);
-  } catch (error) {
-    next(error);
-  }
-});
+// 刪除指定日期的daily report
+router.delete('/', authenticationToken, deleteDailyReport);
 
 // 取得每日組織內的daily_report統計
 router.get('/summary', authenticationToken, async (req, res, next) => {

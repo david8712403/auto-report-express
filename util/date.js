@@ -1,6 +1,7 @@
+const date = require('date-and-time');
 const dtFormat = (datetime) => {
-  return datetime.toISOString().slice(0, 19).replace('T', ' ');
+  return date.format(datetime, 'YYYY-MM-DD HH:mm:ss.SSS');
 };
 module.exports = {
   dtFormat
-}; 
+};
