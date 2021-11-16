@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router('');
 const { dtFormat } = require('../util/date');
+const { getStatisticData } = require('../service/systemService');
 
 // 取得系統更新日誌
 router.get('/logs', async (req, res, next) => {
@@ -26,6 +27,14 @@ router.put('/logs', async (req, res, next) => {
     VALUES ('${title ?? ''}', '${platform ?? ''}', '${author ?? ''}', '${content ?? ''}','${dtFormat(now)}')`;
     await req.db.execute(sql);
     res.sendStatus(200);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/statistic', async (req, res, next) => {
+  try {
+    res.json(await getStatisticData());
   } catch (error) {
     next(error);
   }
