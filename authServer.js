@@ -55,6 +55,12 @@ app.post('/login', async (req, res, next) => {
     if (!bcrypt.compareSync(password, user.password))
       throw new Error('Invalid password');
 
+    const [userRelateRows] = await req.db.execute(`SELECT * FROM user_relations WHERE user_id = ${user.id};`);
+    if (userRelateRows.length === 0) {
+      res.status(404).json({ error: 'No organization found, please contact your manager' });
+      return;
+    }
+
     const now = new Date();
     const payload = { id: user.id, account: user.account };
     const [tokens] = await req.db
