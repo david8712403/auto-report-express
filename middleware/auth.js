@@ -23,7 +23,18 @@ const authenticationToken = async (req, res, next) => {
   });
 };
 
+const authenticationTokenWithAdmin = async (req, res, next) => {
+  authenticationToken(req, res, () => {
+    try {
+      if(req.auth.role === 'admin') next();
+      else res.status(404).json({error: 'Permission denied, not organization administrator.'});
+    } catch (error) {
+      next(error);
+    }
+  });
+};
+
 
 module.exports = {
-  authenticationToken
+  authenticationToken, authenticationTokenWithAdmin
 };
