@@ -2,12 +2,13 @@ const reportService = require('../service/dailyReportService');
 
 const getDailyReport = async (req, res, next) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, userId } = req.query;
     const { organization } = req.auth;
     const [reportRows] = await reportService.getReport({
       organization: organization,
       startDate: startDate,
-      endDate: endDate
+      endDate: endDate,
+      userId: userId
     });
     res.json({ results: reportRows });
   } catch (error) {
