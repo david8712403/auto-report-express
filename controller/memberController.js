@@ -1,10 +1,7 @@
 const memeberService = require('../service/memberService');
 const getMemberList = async (req, res, next) => {
   try {
-    const { organization } = req.auth;
-    res.json({
-      results: await memeberService.getMemberList(organization)
-    });
+    res.json({results: await memeberService.getMemberList(req.auth)});
   } catch (error) {
     next(error);
   }
