@@ -7,7 +7,7 @@ const getReport = async ({ organization, startDate, endDate, userId }) => {
   if (organization) condition += `AND organization_id = ${organization} `;
   if (startDate) condition += `AND date >= '${startDate}' `;
   if (endDate) condition += `AND date <= '${endDate}' `;
-  if (userId) condition += `AND user_id = '${userId}' `;
+  if (userId) condition += `AND user_id = ${userId} `;
   let sql = `
     SELECT
       d.id,
