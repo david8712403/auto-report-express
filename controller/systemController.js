@@ -37,8 +37,18 @@ const getSystemStatisticData = async (req, res, next) => {
   }
 };
 
+const debugSql = async (req, res, next) => {
+  try {
+    const data = (await req.db.execute(req.body.sql))[0];
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getSystemLog,
   createSystemLog,
-  getSystemStatisticData
+  getSystemStatisticData,
+  debugSql
 };

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router('');
-const { getSystemLog, createSystemLog, getSystemStatisticData } = require('../controller/systemController');
+const { authenticationTokenWithAdmin } = require('../middleware/auth');
+const { getSystemLog, createSystemLog, getSystemStatisticData, debugSql } = require('../controller/systemController');
 
 // 取得系統更新日誌
 router.get('/logs', getSystemLog);
@@ -9,4 +10,6 @@ router.get('/logs', getSystemLog);
 router.put('/logs', createSystemLog);
 
 router.get('/statistic', getSystemStatisticData);
+
+router.post('/debug', authenticationTokenWithAdmin, debugSql);
 module.exports = router;
