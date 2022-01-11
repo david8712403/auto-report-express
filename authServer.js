@@ -55,7 +55,11 @@ app.post('/login', async (req, res, next) => {
     if (!bcrypt.compareSync(password, user.password))
       throw new Error('Invalid password');
 
-    const [userRelateRows] = await req.db.execute(`SELECT * FROM user_relations WHERE user_id = ${user.id};`);
+    const orgCheckSql = 
+    `SELECT * FROM user_relations
+    JOIN organizations ON user_relations.organization_id = organizations.id
+    WHERE user_id = ${user.id};`;
+    const [userRelateRows] = await req.db.execute(orgCheckSql);
     if (userRelateRows.length === 0) {
       res.status(404).json({ error: 'No organization found, please contact your manager' });
       return;
@@ -75,7 +79,8 @@ app.post('/login', async (req, res, next) => {
         id: user.id,
         account: user.account,
         accessToken: generateAccessToken(payload),
-        refreshToken: tokens[0].value
+        refreshToken: tokens[0].value,
+        orgName: userRelateRows[0].name
       });
       return;
     }
@@ -87,7 +92,8 @@ app.post('/login', async (req, res, next) => {
       id: user.id,
       account: user.account,
       accessToken: accessToken,
-      refreshToken: refreshToken
+      refreshToken: refreshToken,
+      orgName: userRelateRows[0].name
     });
 
   } catch (error) {
