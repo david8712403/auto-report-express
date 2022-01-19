@@ -1,4 +1,5 @@
 const reportService = require('../service/dailyReportService');
+const mailService = require('../service/mailService');
 
 const getDailyReport = async (req, res, next) => {
   try {
@@ -41,6 +42,18 @@ const createDailyReport = async (req, res, next) => {
       content: content,
       date: date
     });
+
+    const mailContent = mailService.getNewReportContent(req.auth, {
+      id: id,
+      organization: organization,
+      content: content,
+      date: date
+    });
+    mailService.transporter.sendMail(mailContent, (error, info) => {
+      if (error) console.log(error);
+      else console.log('Email sent: ' + info.response);
+    });
+
     res.sendStatus(200);
   } catch (error) {
     next(error);

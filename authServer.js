@@ -66,7 +66,7 @@ app.post('/login', async (req, res, next) => {
     }
 
     const now = new Date();
-    const payload = { id: user.id, account: user.account };
+    const payload = { id: user.id, account: user.account, email: user.email, name:user.name };
     const [tokens] = await req.db
       .execute(`SELECT * FROM tokens WHERE user_id = '${user.id}' AND valid = "Y";`);
     if (tokens.length) {
